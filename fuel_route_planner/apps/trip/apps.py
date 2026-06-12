@@ -9,12 +9,19 @@ class TripConfig(AppConfig):
     name = 'apps.trip'
 
     def ready(self):
-        # Load all geocoded stations into memory once at startup.
-        # Guard against double-loading (Django calls ready() twice in some environments).
+        from django.db import OperationalError, ProgrammingError
         try:
-            from apps.trip.services.station_loader import load_stations_into_memory, get_station_count
+            from apps.trip.services.station_loader import (
+                load_stations_into_memory,
+                get_station_count,
+            )
             if get_station_count() == 0:
                 load_stations_into_memory()
+        except (OperationalError, ProgrammingError):
+            # Tables do not exist yet - happens during migrate, safe to ignore
+            pass
         except Exception as e:
-            # Do not crash the server if DB isn't ready yet (e.g., during migrations)
-            logger.warning(f"Could not load stations into memory at startup: {e}")
+            import logging
+            logging.getLogger(__name__).warning(
+                f"Could not load stations into memory at startup: {e}"
+            )

@@ -58,7 +58,7 @@ class Command(BaseCommand):
 
         self.stdout.write(
             f"Geocoding {total} unique city+state combos "
-            f"(~{total} seconds ≈ {total // 60}m {total % 60}s) ..."
+            f"(~{total} seconds ~ {total // 60}m {total % 60}s) ..."
         )
 
         for i, (city, state) in enumerate(combos, 1):
@@ -90,7 +90,7 @@ class Command(BaseCommand):
                     )
                     failed += 1
 
-            # ⚠️  MANDATORY: Nominatim enforces 1 request/second rate limit
+            # ! MANDATORY: Nominatim enforces 1 request/second rate limit
             time.sleep(1.0)
 
         remaining = FuelStation.objects.filter(geocode_failed=False, lat__isnull=True).count()

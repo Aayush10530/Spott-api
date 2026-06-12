@@ -18,7 +18,7 @@ US_STATES = {
 
 
 class Command(BaseCommand):
-    help = 'Load fuel stations from CSV into the database. Idempotent — safe to re-run.'
+    help = 'Load fuel stations from CSV into the database. Idempotent - safe to re-run.'
 
     def handle(self, *args, **options):
         csv_path = settings.FUEL_CSV_PATH
@@ -74,7 +74,7 @@ class Command(BaseCommand):
             f"(skipped {skipped_non_us} non-US, {skipped_bad_price} bad prices)"
         )
 
-        # Write to database — update_or_create to stay idempotent
+        # Write to database - update_or_create to stay idempotent
         created = updated = 0
         for i, (opis_id, data) in enumerate(station_map.items(), 1):
             obj, was_created = FuelStation.objects.update_or_create(

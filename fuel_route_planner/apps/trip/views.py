@@ -78,7 +78,7 @@ class TripPlanView(APIView):
 
         if cached_route:
             route_result = RouteResult(**cached_route)
-            logger.info(f"Route cache HIT for {start_str} → {finish_str}")
+            logger.info(f"Route cache HIT for {start_str} -> {finish_str}")
         else:
             # ── Step 5: Call OSRM routing API (ONCE) ─────────────────────────
             try:
@@ -101,7 +101,7 @@ class TripPlanView(APIView):
                 },
                 settings.ROUTE_CACHE_TTL,
             )
-            logger.info(f"Route cache MISS — fetched from OSRM for {start_str} → {finish_str}")
+            logger.info(f"Route cache MISS - fetched from OSRM for {start_str} -> {finish_str}")
 
         # ── Step 7: Filter stations near the route ────────────────────────────
         all_stations = get_all_stations()
