@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django.apps import AppConfig
 import logging
 
@@ -21,7 +22,4 @@ class TripConfig(AppConfig):
             # Tables do not exist yet - happens during migrate, safe to ignore
             pass
         except Exception as e:
-            import logging
-            logging.getLogger(__name__).warning(
-                f"Could not load stations into memory at startup: {e}"
-            )
+            logger.warning(f"Could not load stations into memory at startup: {e}")

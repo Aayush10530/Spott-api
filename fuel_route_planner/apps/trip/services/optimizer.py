@@ -1,8 +1,9 @@
+# -*- coding: utf-8 -*-
 import logging
 from dataclasses import dataclass
 from math import radians, sin, cos, sqrt, atan2
 
-from django.conf import settings
+
 
 logger = logging.getLogger(__name__)
 
@@ -154,7 +155,7 @@ def filter_stations_near_route(
     stations_on_route.sort(key=lambda s: s.route_mile)
 
     logger.debug(
-        f"Filtered {len(all_stations)} total stations → "
+        f"Filtered {len(all_stations)} total stations -> "
         f"{len(stations_on_route)} stations within {off_route_threshold_miles} miles of route"
     )
     return stations_on_route

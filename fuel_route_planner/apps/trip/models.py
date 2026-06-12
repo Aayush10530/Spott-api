@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django.db import models
 
 
@@ -26,4 +27,4 @@ class FuelStation(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.name} ({self.city}, {self.state}) — ${self.price:.3f}"
+        return f"{self.name} ({self.city}, {self.state}) - ${self.price:.3f}"
