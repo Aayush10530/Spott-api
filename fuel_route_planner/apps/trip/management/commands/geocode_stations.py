@@ -79,14 +79,14 @@ class Command(BaseCommand):
                     FuelStation.objects.filter(id__in=combo_map[(city, state)]).update(
                         lat=lat, lon=lon
                     )
-                    self.stdout.write(f"  ✓ [{i}/{total}] {city}, {state} → ({lat:.4f}, {lon:.4f})")
+                    self.stdout.write(f"  [OK] [{i}/{total}] {city}, {state} -> ({lat:.4f}, {lon:.4f})")
                     success += 1
                 else:
                     FuelStation.objects.filter(id__in=combo_map[(city, state)]).update(
                         geocode_failed=True
                     )
                     self.stdout.write(
-                        self.style.WARNING(f"  ✗ [{i}/{total}] Not found: {city}, {state}")
+                        self.style.WARNING(f"  [FAIL] [{i}/{total}] Not found: {city}, {state}")
                     )
                     failed += 1
 

@@ -69,7 +69,7 @@ class Command(BaseCommand):
                     }
 
         self.stdout.write(
-            f"Parsed {total_rows} rows → "
+            f"Parsed {total_rows} rows -> "
             f"{len(station_map)} unique US stations "
             f"(skipped {skipped_non_us} non-US, {skipped_bad_price} bad prices)"
         )
