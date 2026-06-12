@@ -3,14 +3,9 @@ import logging
 from dataclasses import dataclass
 from math import radians, sin, cos, sqrt, atan2
 
-
-
 logger = logging.getLogger(__name__)
 
 EARTH_RADIUS_MILES = 3958.8
-
-
-# ── Data structures ──────────────────────────────────────────────────────────
 
 @dataclass
 class StationOnRoute:
@@ -23,9 +18,8 @@ class StationOnRoute:
     lat:              float
     lon:              float
     price:            float
-    route_mile:       float   # Distance along route from start to the nearest route point
-    deviation_miles:  float   # Perpendicular distance from route to this station
-
+    route_mile:       float                                                               
+    deviation_miles:  float                                                      
 
 @dataclass
 class FuelStop:
@@ -34,8 +28,7 @@ class FuelStop:
     station:            StationOnRoute
     gallons_to_fill:    float
     cost_at_stop:       float
-    fuel_level_after:   float  # Remaining range in miles after filling up here
-
+    fuel_level_after:   float                                                  
 
 class InfeasibleRouteError(Exception):
     """Raised when no fuel station is reachable before the tank runs empty."""
@@ -45,9 +38,6 @@ class InfeasibleRouteError(Exception):
             f"No fuel station reachable within 500 miles after mile {stuck_at_mile:.0f}. "
             f"Route cannot be completed with available stations."
         )
-
-
-# ── Core math ────────────────────────────────────────────────────────────────
 
 def haversine_miles(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """
@@ -69,9 +59,6 @@ def haversine_miles(lat1: float, lon1: float, lat2: float, lon2: float) -> float
         + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
     )
     return EARTH_RADIUS_MILES * 2 * atan2(sqrt(a), sqrt(1 - a))
-
-
-# ── Route filtering ──────────────────────────────────────────────────────────
 
 def filter_stations_near_route(
     all_stations: list[dict],
@@ -106,10 +93,9 @@ def filter_stations_near_route(
     if not polyline or not all_stations:
         return []
 
-    # Step 1: Build bounding box from polyline (polyline is [lon, lat] pairs)
     lats = [point[1] for point in polyline]
     lons = [point[0] for point in polyline]
-    buffer = 2.0  # ~140 miles buffer, generous enough to catch all 50-mile deviations
+    buffer = 2.0                                                                      
     min_lat = min(lats) - buffer
     max_lat = max(lats) + buffer
     min_lon = min(lons) - buffer
@@ -121,22 +107,19 @@ def filter_stations_near_route(
         s_lat = station['lat']
         s_lon = station['lon']
 
-        # Step 2: Bounding box check — no trig needed, pure comparison
         if not (min_lat <= s_lat <= max_lat and min_lon <= s_lon <= max_lon):
             continue
 
-        # Step 3: Find nearest polyline point using haversine
         min_dev = float('inf')
         best_route_mile = 0.0
 
         for i, (p_lon, p_lat) in enumerate(polyline):
-            # NOTE: polyline is [lon, lat] — must swap to (lat, lon) for haversine
+                                                                                  
             dev = haversine_miles(s_lat, s_lon, p_lat, p_lon)
             if dev < min_dev:
                 min_dev = dev
                 best_route_mile = cumulative_distances[i]
 
-        # Step 4: Threshold filter
         if min_dev <= off_route_threshold_miles:
             stations_on_route.append(StationOnRoute(
                 opis_id=station['opis_id'],
@@ -151,7 +134,6 @@ def filter_stations_near_route(
                 deviation_miles=min_dev,
             ))
 
-    # Step 5: Sort by position along route
     stations_on_route.sort(key=lambda s: s.route_mile)
 
     logger.debug(
@@ -159,9 +141,6 @@ def filter_stations_near_route(
         f"{len(stations_on_route)} stations within {off_route_threshold_miles} miles of route"
     )
     return stations_on_route
-
-
-# ── Fuel optimization algorithm ───────────────────────────────────────────────
 
 def select_optimal_stops(
     stations_on_route: list[StationOnRoute],
@@ -194,11 +173,10 @@ def select_optimal_stops(
     """
     fuel_stops: list[FuelStop] = []
     current_mile: float = 0.0
-    current_fuel_miles: float = tank_miles  # Start with a full tank
+    current_fuel_miles: float = tank_miles                          
 
     while (current_mile + current_fuel_miles) < total_distance_miles:
 
-        # All stations reachable from current position with current fuel
         reachable = [
             s for s in stations_on_route
             if current_mile < s.route_mile <= current_mile + current_fuel_miles
@@ -207,55 +185,47 @@ def select_optimal_stops(
         if not reachable:
             raise InfeasibleRouteError(current_mile)
 
-        # All stations reachable if we had a FULL tank from current position
         full_window = [
             s for s in stations_on_route
             if current_mile < s.route_mile <= current_mile + tank_miles
         ]
 
-        # Find cheapest in full window
         cheapest_in_window = min(full_window, key=lambda s: s.price)
 
-        # Can we reach the cheapest station with our current (possibly partial) fuel?
         can_reach_cheapest = (
             cheapest_in_window.route_mile - current_mile
         ) <= current_fuel_miles
 
         target = cheapest_in_window if can_reach_cheapest else min(reachable, key=lambda s: s.price)
 
-        # ── Travel to the target station ──────────────────────────────────────
         miles_traveled = target.route_mile - current_mile
         current_fuel_miles -= miles_traveled
         current_mile = target.route_mile
 
-        # ── Decide how much to fill ───────────────────────────────────────────
-        # Look ahead from this station: any cheaper options in the next full tank?
         next_window = [
             s for s in stations_on_route
             if current_mile < s.route_mile <= current_mile + tank_miles
         ]
 
         if not next_window:
-            # No more stations ahead — fill up completely to guarantee we reach the end
+                                                                                       
             fill_miles = tank_miles - current_fuel_miles
 
         else:
             cheaper_ahead = [s for s in next_window if s.price < target.price]
 
             if not cheaper_ahead:
-                # This station is the cheapest in the next 500 miles → fill completely
+                                                                                      
                 fill_miles = tank_miles - current_fuel_miles
 
             else:
-                # A cheaper station exists ahead → buy only what we need to reach it
+                                                                                    
                 nearest_cheaper = min(cheaper_ahead, key=lambda s: s.route_mile)
                 miles_to_next_cheap = nearest_cheaper.route_mile - current_mile
 
-                # Additional fuel needed to reach cheaper station + 10-mile safety buffer
                 needed_extra = miles_to_next_cheap - current_fuel_miles + 10.0
                 fill_miles = max(0.0, min(needed_extra, tank_miles - current_fuel_miles))
 
-                # Final safety check: ensure we can definitely reach at least one more station
                 if current_fuel_miles + fill_miles < miles_to_next_cheap:
                     fill_miles = miles_to_next_cheap - current_fuel_miles + 10.0
                     fill_miles = min(fill_miles, tank_miles - current_fuel_miles)

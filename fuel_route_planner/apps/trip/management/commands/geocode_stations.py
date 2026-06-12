@@ -10,7 +10,6 @@ from apps.trip.services.geocoding import geocode_city_state, GeocodingError
 
 logger = logging.getLogger(__name__)
 
-
 class Command(BaseCommand):
     help = (
         'Geocode all FuelStation records by city+state using Nominatim. '
@@ -37,13 +36,11 @@ class Command(BaseCommand):
         limit  = options['limit']
         resume = options['resume']
 
-        # Build list of unique (city, state) combos that still need geocoding
         if resume:
             qs = FuelStation.objects.filter(geocode_failed=False, lat__isnull=True)
         else:
             qs = FuelStation.objects.filter(geocode_failed=False)
 
-        # Group station IDs by city+state
         combo_map: dict[tuple, list[int]] = defaultdict(list)
         for station in qs.values('id', 'city', 'state'):
             key = (station['city'], station['state'])
@@ -69,7 +66,7 @@ class Command(BaseCommand):
                 self.stdout.write(
                     self.style.WARNING(f"  API error for {city}, {state}: {exc}")
                 )
-                # Mark as failed so we skip on future --resume runs
+                                                                   
                 FuelStation.objects.filter(id__in=combo_map[(city, state)]).update(
                     geocode_failed=True
                 )
@@ -91,7 +88,6 @@ class Command(BaseCommand):
                     )
                     failed += 1
 
-            # ! MANDATORY: Nominatim enforces 1 request/second rate limit
             time.sleep(1.0)
 
         remaining = FuelStation.objects.filter(geocode_failed=False, lat__isnull=True).count()

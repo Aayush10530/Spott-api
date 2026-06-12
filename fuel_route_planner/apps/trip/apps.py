@@ -4,7 +4,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
 class TripConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'apps.trip'
@@ -19,7 +18,7 @@ class TripConfig(AppConfig):
             if get_station_count() == 0:
                 load_stations_into_memory()
         except (OperationalError, ProgrammingError):
-            # Tables do not exist yet - happens during migrate, safe to ignore
+                                                                              
             pass
         except Exception as e:
             logger.warning(f"Could not load stations into memory at startup: {e}")

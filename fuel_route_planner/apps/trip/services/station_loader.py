@@ -3,10 +3,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Module-level cache — lives for the entire process lifetime.
-# Each entry: {opis_id, name, address, city, state, lat, lon, price}
 _STATION_CACHE: list[dict] = []
-
 
 def load_stations_into_memory() -> None:
     """
@@ -26,11 +23,9 @@ def load_stations_into_memory() -> None:
     _STATION_CACHE = list(qs)
     logger.info(f"Loaded {len(_STATION_CACHE)} fuel stations into memory.")
 
-
 def get_all_stations() -> list[dict]:
     """Return the full in-memory station list."""
     return _STATION_CACHE
-
 
 def get_station_count() -> int:
     """Return number of stations currently in memory."""

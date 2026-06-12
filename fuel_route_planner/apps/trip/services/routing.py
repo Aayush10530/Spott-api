@@ -5,24 +5,21 @@ from dataclasses import dataclass
 import requests
 from django.conf import settings
 
-from apps.trip.services.optimizer import haversine_miles  # reuse, never re-implement
+from apps.trip.services.optimizer import haversine_miles                             
 
 logger = logging.getLogger(__name__)
-
 
 class RoutingError(Exception):
     """Raised when OSRM API is unavailable or returns an error response."""
     pass
 
-
 @dataclass
 class RouteResult:
     """Parsed result from a single OSRM routing API call."""
-    polyline:              list[list[float]]   # [[lon, lat], ...] — OSRM coordinate order
+    polyline:              list[list[float]]                                              
     total_distance_miles:  float
     duration_hours:        float
-    cumulative_distances:  list[float]         # Mile marker at each polyline point
-
+    cumulative_distances:  list[float]                                             
 
 def get_route(
     start_lat: float,
@@ -46,7 +43,7 @@ def get_route(
     Raises:
         RoutingError: On any network failure or non-OK OSRM response
     """
-    # Build URL — CRITICAL: lon comes before lat in OSRM
+                                                        
     url = (
         f"{settings.OSRM_BASE_URL}/route/v1/driving/"
         f"{start_lon},{start_lat};{finish_lon},{finish_lat}"
@@ -72,10 +69,7 @@ def get_route(
 
     route = data["routes"][0]
 
-    # Extract and convert units
-    # OSRM distance is in METERS → convert to miles
-    # OSRM duration is in SECONDS → convert to hours
-    polyline              = route["geometry"]["coordinates"]   # [[lon, lat], ...]
+    polyline              = route["geometry"]["coordinates"]                      
     total_distance_miles  = route["distance"] / 1609.344
     duration_hours        = route["duration"] / 3600.0
     cumulative_distances  = _compute_cumulative_distances(polyline)
@@ -91,7 +85,6 @@ def get_route(
         duration_hours=duration_hours,
         cumulative_distances=cumulative_distances,
     )
-
 
 def _compute_cumulative_distances(polyline: list[list[float]]) -> list[float]:
     """
@@ -117,9 +110,9 @@ def _compute_cumulative_distances(polyline: list[list[float]]) -> list[float]:
     running = 0.0
 
     for i in range(1, len(polyline)):
-        prev_lon, prev_lat = polyline[i - 1]  # OSRM: [lon, lat]
-        curr_lon, curr_lat = polyline[i]       # OSRM: [lon, lat]
-        # haversine_miles takes (lat, lon) — swap from OSRM [lon, lat]
+        prev_lon, prev_lat = polyline[i - 1]                    
+        curr_lon, curr_lat = polyline[i]                         
+                                                                      
         segment = haversine_miles(prev_lat, prev_lon, curr_lat, curr_lon)
         running += segment
         distances.append(running)

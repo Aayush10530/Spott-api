@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from rest_framework import serializers
 
-
 class TripRequestSerializer(serializers.Serializer):
     start = serializers.CharField(
         max_length=200,

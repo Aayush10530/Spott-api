@@ -7,11 +7,9 @@ logger = logging.getLogger(__name__)
 
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 
-
 class GeocodingError(Exception):
     """Raised when Nominatim API call fails due to a network or HTTP error."""
     pass
-
 
 def _call_nominatim(query: str) -> tuple[float, float] | None:
     """
@@ -35,7 +33,6 @@ def _call_nominatim(query: str) -> tuple[float, float] | None:
 
     return float(results[0]["lat"]), float(results[0]["lon"])
 
-
 def geocode_location(location_str: str) -> tuple[float, float] | None:
     """
     Geocode a free-form US location string (e.g., "New York, NY").
@@ -44,7 +41,6 @@ def geocode_location(location_str: str) -> tuple[float, float] | None:
     Raises GeocodingError on API failure.
     """
     return _call_nominatim(location_str)
-
 
 def geocode_city_state(city: str, state: str) -> tuple[float, float] | None:
     """

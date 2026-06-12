@@ -17,7 +17,6 @@ US_STATES = {
     'SD','TN','TX','UT','VT','VA','WA','WV','WI','WY',
 }
 
-
 class Command(BaseCommand):
     help = 'Load fuel stations from CSV into the database. Idempotent - safe to re-run.'
 
@@ -30,7 +29,6 @@ class Command(BaseCommand):
 
         self.stdout.write(f"Reading {csv_path} ...")
 
-        # Group rows by OPIS Truckstop ID, keep minimum price per ID
         station_map: dict[str, dict] = {}
         skipped_non_us = 0
         skipped_bad_price = 0
@@ -57,7 +55,6 @@ class Command(BaseCommand):
                 if not opis_id:
                     continue
 
-                # Keep the entry with the lowest price for this OPIS ID
                 if opis_id not in station_map or price < station_map[opis_id]['price']:
                     station_map[opis_id] = {
                         'opis_id': opis_id,
@@ -75,7 +72,6 @@ class Command(BaseCommand):
             f"(skipped {skipped_non_us} non-US, {skipped_bad_price} bad prices)"
         )
 
-        # Write to database - update_or_create to stay idempotent
         created = updated = 0
         for i, (opis_id, data) in enumerate(station_map.items(), 1):
             obj, was_created = FuelStation.objects.update_or_create(
@@ -87,10 +83,10 @@ class Command(BaseCommand):
                     'state':   data['state'],
                     'rack_id': data['rack_id'],
                     'price':   data['price'],
-                    # Never overwrite lat/lon if they are already set
+                                                                     
                 },
             )
-            # Only update price if the new price is lower (handles re-runs after price changes)
+                                                                                               
             if not was_created and obj.price > data['price']:
                 obj.price = data['price']
                 obj.save(update_fields=['price'])

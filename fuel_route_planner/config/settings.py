@@ -74,15 +74,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 STATIC_URL = '/static/'
 
-# ── External API config ─────────────────────────────────────────────────────
 OSRM_BASE_URL = os.getenv('OSRM_BASE_URL', 'http://router.project-osrm.org')
 NOMINATIM_USER_AGENT = os.getenv('NOMINATIM_USER_AGENT', 'FuelRoutePlanner/1.0')
 
-# ── Vehicle / business constants ────────────────────────────────────────────
-VEHICLE_TANK_MILES = 500          # Maximum range on a full tank
-VEHICLE_MPG = 10                  # Miles per gallon
-OFF_ROUTE_THRESHOLD_MILES = 50.0  # Max deviation from route to include a station
-ROUTE_CACHE_TTL = 3600            # Seconds to cache OSRM responses (1 hour)
+VEHICLE_TANK_MILES = 500                                        
+VEHICLE_MPG = 10                                    
+OFF_ROUTE_THRESHOLD_MILES = 50.0                                                 
+ROUTE_CACHE_TTL = 3600                                                      
 
-# ── CSV data file ────────────────────────────────────────────────────────────
 FUEL_CSV_PATH = BASE_DIR / 'fuel-prices-for-be-assessment.csv'

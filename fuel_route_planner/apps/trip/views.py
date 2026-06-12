@@ -21,7 +21,6 @@ from apps.trip.services.station_loader import get_all_stations
 
 logger = logging.getLogger(__name__)
 
-
 class TripPlanView(APIView):
     """
     POST /api/v1/trip/plan/
@@ -30,7 +29,7 @@ class TripPlanView(APIView):
     """
 
     def post(self, request):
-        # ── Step 1: Validate input ────────────────────────────────────────────
+                                                                                
         serializer = TripRequestSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -38,7 +37,6 @@ class TripPlanView(APIView):
         start_str  = serializer.validated_data['start']
         finish_str = serializer.validated_data['finish']
 
-        # ── Step 2: Geocode start location ────────────────────────────────────
         try:
             start_coords = geocode_location(start_str)
         except GeocodingError:
@@ -54,7 +52,6 @@ class TripPlanView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # ── Step 3: Geocode finish location ───────────────────────────────────
         try:
             finish_coords = geocode_location(finish_str)
         except GeocodingError:
@@ -73,7 +70,6 @@ class TripPlanView(APIView):
         start_lat, start_lon   = start_coords
         finish_lat, finish_lon = finish_coords
 
-        # ── Step 4: Check route cache ─────────────────────────────────────────
         cache_key = _build_cache_key(start_lat, start_lon, finish_lat, finish_lon)
         cached_route = cache.get(cache_key)
 
@@ -81,7 +77,7 @@ class TripPlanView(APIView):
             route_result = RouteResult(**cached_route)
             logger.info(f"Route cache HIT for {start_str} -> {finish_str}")
         else:
-            # ── Step 5: Call OSRM routing API (ONCE) ─────────────────────────
+                                                                               
             try:
                 route_result = get_route(start_lat, start_lon, finish_lat, finish_lon)
             except RoutingError as exc:
@@ -91,7 +87,6 @@ class TripPlanView(APIView):
                     status=status.HTTP_503_SERVICE_UNAVAILABLE,
                 )
 
-            # ── Step 6: Cache the route result ────────────────────────────────
             cache.set(
                 cache_key,
                 {
@@ -104,7 +99,6 @@ class TripPlanView(APIView):
             )
             logger.info(f"Route cache MISS - fetched from OSRM for {start_str} -> {finish_str}")
 
-        # ── Step 7: Filter stations near the route ────────────────────────────
         all_stations = get_all_stations()
         if not all_stations:
             return Response(
@@ -125,7 +119,6 @@ class TripPlanView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # ── Step 8: Run the fuel optimization algorithm ───────────────────────
         try:
             fuel_stops = select_optimal_stops(
                 stations_on_route=stations_on_route,
@@ -139,7 +132,6 @@ class TripPlanView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # ── Step 9: Build and return response ─────────────────────────────────
         response_data = _build_response(
             route=route_result,
             fuel_stops=fuel_stops,
@@ -150,9 +142,6 @@ class TripPlanView(APIView):
         )
         return Response(response_data, status=status.HTTP_200_OK)
 
-
-# ── Private helpers ───────────────────────────────────────────────────────────
-
 def _build_cache_key(
     start_lat: float,
     start_lon: float,
@@ -162,7 +151,6 @@ def _build_cache_key(
     """Generate a short, deterministic cache key for a route coordinate pair."""
     key_str = f"{start_lat:.4f},{start_lon:.4f},{finish_lat:.4f},{finish_lon:.4f}"
     return f"route:{hashlib.md5(key_str.encode()).hexdigest()}"
-
 
 def _build_response(
     route: RouteResult,
@@ -190,7 +178,7 @@ def _build_response(
             "finish_coords":       {"lat": finish_coords[0], "lon": finish_coords[1]},
             "total_distance_miles": round(route.total_distance_miles, 1),
             "duration_hours":       round(route.duration_hours, 1),
-            "polyline":             route.polyline,  # [[lon, lat], ...] for map rendering
+            "polyline":             route.polyline,                                       
         },
         "fuel_stops": [
             {
