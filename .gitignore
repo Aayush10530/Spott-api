@@ -1,2 +1,3 @@
 ﻿*.md
 *.csv
+!README.md
